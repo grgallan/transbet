@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Esqui Radical</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game-canvas"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="score-box">
+    <div class="label">PONTOS</div>
+    <div id="score">0</div>
+  </div>
+  <div id="lives-box"></div>
+</div>
+
+<div id="start-screen" class="overlay">
+  <h1>⛷️ Esqui Radical</h1>
+  <p>Desvie das árvores e pedras, passe pelos portões e pegue as estrelas!</p>
+  <div class="controls-hint">
+    <span>⬅️ ➡️ ou A / D para desviar</span>
+    <span>⬆️ ou ESPAÇO para pular sobre as pedras</span>
+  </div>
+  <p>Recorde: <span id="start-best-score">0</span></p>
+  <button id="start-btn">JOGAR</button>
+</div>
+
+<div id="gameover-screen" class="overlay hidden">
+  <h1>💥 Fim de Jogo!</h1>
+  <p>Sua pontuação: <span id="final-score">0</span></p>
+  <p>Recorde: <span id="best-score">0</span></p>
+  <button id="restart-btn">JOGAR DE NOVO</button>
+</div>
+
+<div id="touch-controls" class="hidden">
+  <button id="btn-left" class="touch-btn">⬅️</button>
+  <button id="btn-jump" class="touch-btn">⬆️</button>
+  <button id="btn-right" class="touch-btn">➡️</button>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
