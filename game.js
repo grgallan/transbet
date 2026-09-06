@@ -83,7 +83,7 @@
   addMountain(38, -60, 1.4, 0xcfe6ff);
 
   const skierTextureLoader = new THREE.TextureLoader();
-  const SKIER_IMAGE_ASPECT = 947 / 1370;
+  const SKIER_IMAGE_ASPECT = 385 / 1000;
   const SKIER_HEIGHT = 2.3;
 
   function buildSkier() {
@@ -94,7 +94,7 @@
     sprite.scale.set(SKIER_HEIGHT * SKIER_IMAGE_ASPECT, SKIER_HEIGHT, 1);
     sprite.position.y = SKIER_HEIGHT / 2;
     g.add(sprite);
-    skierTextureLoader.load('assets/cientista_skier.png', (tex) => {
+    skierTextureLoader.load('assets/skier_boy.png', (tex) => {
       spriteMat.map = tex;
       spriteMat.needsUpdate = true;
     });
