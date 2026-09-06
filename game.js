@@ -82,73 +82,33 @@
   addMountain(22, -80, 2.0, 0xdfeeff);
   addMountain(38, -60, 1.4, 0xcfe6ff);
 
+  const skierTextureLoader = new THREE.TextureLoader();
+  const SKIER_IMAGE_ASPECT = 947 / 1370;
+  const SKIER_HEIGHT = 2.3;
+
   function buildSkier() {
     const g = new THREE.Group();
-    const jacketColor = 0xff4d4d;
 
-    const body = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.32, 0.42, 1.1, 10),
-      new THREE.MeshStandardMaterial({ color: jacketColor })
-    );
-    body.position.y = 1.0;
-    g.add(body);
-
-    const helmet = new THREE.Mesh(
-      new THREE.SphereGeometry(0.3, 14, 14),
-      new THREE.MeshStandardMaterial({ color: 0xffe066 })
-    );
-    helmet.position.y = 1.75;
-    g.add(helmet);
-
-    const visor = new THREE.Mesh(
-      new THREE.SphereGeometry(0.18, 10, 10),
-      new THREE.MeshStandardMaterial({ color: 0x2b3a55 })
-    );
-    visor.scale.set(1, 0.7, 0.6);
-    visor.position.set(0, 1.72, 0.24);
-    g.add(visor);
-
-    const armMat = new THREE.MeshStandardMaterial({ color: jacketColor });
-    const armGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.75, 8);
-    const armL = new THREE.Mesh(armGeo, armMat);
-    armL.position.set(-0.45, 1.05, 0.05);
-    armL.rotation.z = 0.5;
-    g.add(armL);
-    const armR = armL.clone();
-    armR.position.x = 0.45;
-    armR.rotation.z = -0.5;
-    g.add(armR);
-
-    const poleMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
-    const poleGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.9, 6);
-    const poleL = new THREE.Mesh(poleGeo, poleMat);
-    poleL.position.set(-0.6, 0.55, 0.25);
-    poleL.rotation.z = 0.35;
-    g.add(poleL);
-    const poleR = poleL.clone();
-    poleR.position.x = 0.6;
-    poleR.rotation.z = -0.35;
-    g.add(poleR);
-
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x2b3a55 });
-    const legGeo = new THREE.CylinderGeometry(0.13, 0.13, 0.6, 8);
-    const legL = new THREE.Mesh(legGeo, legMat);
-    legL.position.set(-0.18, 0.5, 0.1);
-    g.add(legL);
-    const legR = legL.clone();
-    legR.position.x = 0.18;
-    g.add(legR);
+    const spriteMat = new THREE.SpriteMaterial({ transparent: true, alphaTest: 0.3 });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(SKIER_HEIGHT * SKIER_IMAGE_ASPECT, SKIER_HEIGHT, 1);
+    sprite.position.y = SKIER_HEIGHT / 2;
+    g.add(sprite);
+    skierTextureLoader.load('assets/cientista_skier.png', (tex) => {
+      spriteMat.map = tex;
+      spriteMat.needsUpdate = true;
+    });
 
     const skiMat = new THREE.MeshStandardMaterial({ color: 0xffcc00 });
     const skiGeo = new THREE.BoxGeometry(0.16, 0.05, 1.7);
     const skiL = new THREE.Mesh(skiGeo, skiMat);
-    skiL.position.set(-0.2, 0.15, 0.25);
+    skiL.position.set(-0.22, 0.05, 0.2);
+    skiL.castShadow = true;
     g.add(skiL);
     const skiR = skiL.clone();
-    skiR.position.x = 0.2;
+    skiR.position.x = 0.22;
     g.add(skiR);
 
-    g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
     return g;
   }
 
