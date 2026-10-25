@@ -4,57 +4,34 @@
 const $ = id => document.getElementById(id);
 const $$ = sel => [...document.querySelectorAll(sel)];
 
-// ---------- sala e conexão com a TV ----------
-const params = new URLSearchParams(location.search);
-let sala = (params.get('sala') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-try {
-  if (sala) localStorage.setItem('karaoke:sala-cel', sala);
-  else sala = localStorage.getItem('karaoke:sala-cel') || '';
-} catch {}
-
-// "socket" simples sobre o transporte (mesma interface usada no resto do arquivo)
+// ---------- tudo roda neste celular ----------
+// O "host" guarda fila, nota, histórico e faz a busca; esta tela conversa com ele direto.
+let host = null;
+const esperando = new Map();
 const socket = {
-  conn: null, ouvintes: {},
-  emit(tipo, dados) { this.conn?.enviar({ tipo, dados }); },
+  ouvintes: {},
+  emit(tipo, dados) { host?.acao(tipo, dados); },
   on(tipo, fn) { (this.ouvintes[tipo] ||= []).push(fn); },
   disparar(tipo, dados) { (this.ouvintes[tipo] || []).forEach(fn => fn(dados)); },
 };
-const esperando = new Map();
-function pedido(nome, dados, tempo = 25000) {
+const transporteLocal = {
+  enviar: (_, msg) => {
+    if (msg?.tipo !== 'resposta') return;
+    const p = esperando.get(msg.id);
+    if (!p) return;
+    esperando.delete(msg.id);
+    msg.ok ? p.ok(msg.dados) : p.falha(new Error(msg.erro));
+  },
+  todos: msg => { if (msg?.tipo === 'progresso') socket.disparar('progresso', msg.dados); },
+  total: () => 1,
+};
+function pedido(nome, dados) {
   return new Promise((ok, falha) => {
-    if (!socket.conn) return falha(new Error('Conecte-se a uma sala primeiro.'));
     const id = Math.random().toString(36).slice(2);
-    const t = setTimeout(() => { esperando.delete(id); falha(new Error('A TV não respondeu. Confira se a tela do Karaokê está aberta.')); }, tempo);
-    esperando.set(id, { ok, falha, t });
-    socket.conn.enviar({ tipo: 'pedido', id, nome, dados });
+    esperando.set(id, { ok, falha });
+    host.receber('celular', { tipo: 'pedido', id, nome, dados });
   });
 }
-function conectarSala() {
-  if (!sala) { mostrarEntrada(); return; }
-  document.getElementById('codigoAtual').textContent = sala;
-  socket.conn = Transporte.cliente(sala, {
-    aoReceber: msg => {
-      if (msg?.tipo === 'resposta') {
-        const p = esperando.get(msg.id);
-        if (!p) return;
-        esperando.delete(msg.id); clearTimeout(p.t);
-        msg.ok ? p.ok(msg.dados) : p.falha(new Error(msg.erro));
-        return;
-      }
-      if (msg?.tipo) socket.disparar(msg.tipo, msg.dados);
-    },
-    aoStatus: s => {
-      const on = s === 'conectado';
-      document.getElementById('status').classList.toggle('on', on);
-      const txt = { conectando: 'Conectando à TV…', 'tv-ausente': 'TV não encontrada. A tela do Karaokê está aberta na TV?', 'sem-rede': 'Sem internet. Tentando de novo…', desconectado: 'Conexão com a TV caiu. Reconectando…' }[s];
-      const faixa = document.getElementById('faixaConexao');
-      faixa.textContent = txt || '';
-      faixa.classList.toggle('oculto', on || !txt);
-      if (on) carregarConfig();
-    },
-  });
-}
-function mostrarEntrada() { document.getElementById('modalSala').classList.remove('oculto'); setTimeout(() => document.getElementById('campoSala').focus(), 50); }
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const mostrar = (el, sim) => el.classList.toggle('oculto', !sim);
 const guardar = (k, v) => { try { localStorage.setItem('karaoke:' + k, JSON.stringify(v)); } catch {} };
@@ -71,7 +48,9 @@ let periodo = 'hoje';
 function irPara(aba) {
   $$('.aba').forEach(a => a.classList.toggle('ativa', a.id === 'aba-' + aba));
   $$('.abas button').forEach(b => b.classList.toggle('ativa', b.dataset.aba === aba));
+  guardar('aba', aba);
   window.scrollTo({ top: 0 });
+  posicionarPalco();
 }
 $$('.abas button').forEach(b => b.onclick = () => irPara(b.dataset.aba));
 document.addEventListener('click', e => {
@@ -269,6 +248,7 @@ function renderAgora() {
   mostrar($('agora'), !!a);
   if (!a) return;
   $('agoraThumb').src = a.thumb;
+  $('btAbrirYt').href = 'https://www.youtube.com/watch?v=' + a.videoId;
   $('agoraTitulo').textContent = a.titulo;
   $('agoraCantor').textContent = '🎤 ' + a.cantor;
   $('btAlternar').textContent = est.tocando ? '❚❚' : '▶';
@@ -359,20 +339,7 @@ $('btMic').onclick = async () => {
 };
 socket.on('comando', c => { if (c.acao === 'reiniciar') MicrofoneNota.reiniciar(); });
 
-// ---------- conexão ----------
-$('urlTv').textContent = new URL('tv.html', location.href).toString().replace(/\?.*/, '');
 if (!window.isSecureContext) $('micInfo').textContent = 'Abra o app pelo endereço https para usar o microfone.';
-
-// entrar / trocar de sala
-$('formSala').onsubmit = e => {
-  e.preventDefault();
-  const c = $('campoSala').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (c.length < 4) return;
-  const u = new URL(location.href);
-  u.searchParams.set('sala', c);
-  location.href = u.toString();
-};
-$('btTrocarSala').onclick = () => { $('campoSala').value = ''; mostrarEntrada(); };
 
 // ---------- estado ----------
 socket.on('estado', e => {
@@ -382,6 +349,7 @@ socket.on('estado', e => {
   MicrofoneNota.novaMusica(e.exibindoNota ? null : e.atual?.id);
   renderFila(); renderFavoritos(); renderRanking(); renderAgora(); renderNota(); renderAjustes();
   if (resultados.length) renderResultados(); // atualiza corações
+  sincronizarPlayer(false);
 });
 
 function aviso(msg, tipo = 'info') {
@@ -392,8 +360,126 @@ function aviso(msg, tipo = 'info') {
   while ($('avisos').children.length > 2) $('avisos').firstElementChild.remove();
   setTimeout(() => d.remove(), 4000);
 }
-socket.on('aviso', ({ msg, tipo }) => aviso(msg, tipo));
+
+
+// ---------- player (fica no celular; o Transmitir do YouTube manda para a TV) ----------
+const YT_PLAYING = 1, YT_PAUSED = 2, YT_ENDED = 0, YT_BUFFERING = 3;
+let player = null, playerPronto = false;
+let idTocando = null, notaParou = null, fimEnviado = null, timerIntro = null, timerChecar = null;
+
+window.onYouTubeIframeAPIReady = () => {
+  player = new YT.Player('yt', {
+    width: '100%', height: '100%',
+    playerVars: { autoplay: 1, controls: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, hl: 'pt-BR' },
+    events: {
+      onReady: () => { playerPronto = true; sincronizarPlayer(true); },
+      onStateChange: e => {
+        if (e.data === YT_PLAYING || e.data === YT_BUFFERING) mostrar($('tocarOverlay'), false);
+        if (e.data === YT_PLAYING) host.estadoDoPlayer(true);
+        if (e.data === YT_PAUSED && !est.exibindoNota) host.estadoDoPlayer(false);
+        if (e.data === YT_ENDED && idTocando && fimEnviado !== idTocando) {
+          fimEnviado = idTocando;
+          host.fimDaMusica(idTocando);
+        }
+      },
+      onError: e => host.erroNoVideo(idTocando, e.data),
+    },
+  });
+};
+
+function sincronizarPlayer(forcar) {
+  posicionarPalco();
+  if (est.exibindoNota) {
+    if (notaParou !== est.exibindoNota.item.id) {
+      notaParou = est.exibindoNota.item.id;
+      clearInterval(timerIntro);
+      mostrar($('intro'), false);
+      if (playerPronto) player.stopVideo();
+    }
+    return;
+  }
+  notaParou = null;
+  const novo = est.atual?.id || null;
+  if (novo === idTocando && !forcar) return;
+  const mudou = novo !== idTocando;
+  idTocando = novo;
+  if (!novo) {
+    clearInterval(timerIntro);
+    mostrar($('intro'), false);
+    if (playerPronto) player.stopVideo();
+    return;
+  }
+  if (mudou || (playerPronto && ![YT_PLAYING, YT_BUFFERING].includes(player.getPlayerState?.()))) iniciarMusica(est.atual);
+}
+
+function iniciarMusica(item) {
+  clearInterval(timerIntro);
+  clearTimeout(timerChecar);
+  fimEnviado = null;
+  mostrar($('tocarOverlay'), false);
+  $('introCantor').textContent = item.cantor;
+  $('introMusica').textContent = item.titulo;
+  mostrar($('intro'), true);
+  let n = 3;
+  $('introContagem').textContent = n;
+  timerIntro = setInterval(() => {
+    n--;
+    $('introContagem').textContent = n > 0 ? n : '🎤';
+    if (n > 0) return;
+    clearInterval(timerIntro);
+    mostrar($('intro'), false);
+    if (!playerPronto) return;
+    player.setVolume(est.volume ?? 80);
+    player.loadVideoById({ videoId: item.videoId });
+    // se o navegador bloquear o play automático, mostra o botão de tocar
+    timerChecar = setTimeout(() => {
+      if (idTocando === item.id && ![YT_PLAYING, YT_BUFFERING, YT_PAUSED].includes(player.getPlayerState?.())) mostrar($('tocarOverlay'), true);
+    }, 3500);
+  }, 1000);
+}
+
+$('tocarOverlay').onclick = () => { if (playerPronto) player.playVideo(); mostrar($('tocarOverlay'), false); };
+
+socket.on('comando', c => {
+  if (c.acao === 'reiniciar') fimEnviado = null;
+  if (!playerPronto) return;
+  if (c.acao === 'pausar') player.pauseVideo();
+  if (c.acao === 'continuar') player.playVideo();
+  if (c.acao === 'reiniciar') { player.seekTo(0, true); player.playVideo(); }
+  if (c.acao === 'volume') player.setVolume(c.valor);
+});
+
+setInterval(() => {
+  if (!playerPronto || !idTocando || player.getPlayerState?.() !== YT_PLAYING) return;
+  host.progresso({ id: idTocando, atual: player.getCurrentTime(), total: player.getDuration() });
+}, 1000);
+
+// O player nunca sai da página (senão a música para): fica sobre o espaço do Palco
+// ou é levado para fora da tela nas outras abas.
+function posicionarPalco() {
+  const p = $('palco');
+  const visivel = $('aba-fila').classList.contains('ativa') && !!est.atual;
+  mostrar($('palcoVazio'), !est.atual);
+  if (!visivel) { p.classList.add('fora'); return; }
+  const r = $('palcoEspaco').getBoundingClientRect();
+  p.classList.remove('fora');
+  p.style.top = (r.top + scrollY) + 'px';
+  p.style.left = (r.left + scrollX) + 'px';
+  p.style.width = r.width + 'px';
+  p.style.height = r.height + 'px';
+}
+addEventListener('resize', posicionarPalco);
+if ('ResizeObserver' in window) new ResizeObserver(() => posicionarPalco()).observe(document.querySelector('main'));
+$('agora').addEventListener('click', e => { if (!e.target.closest('button')) irPara('fila'); });
 
 renderSugestoes();
-conectarSala();
+host = KaraokeHost({
+  transporte: transporteLocal,
+  aoEstado: e => socket.disparar('estado', e),
+  aoComando: c => socket.disparar('comando', c),
+  aoAviso: (msg, tipo) => aviso(msg, tipo),
+});
+host.iniciar();
+carregarConfig();
+irPara(lerLocal('aba', null) || (est.atual ? 'fila' : 'buscar'));
 if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('sw.js').catch(() => {});

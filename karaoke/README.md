@@ -1,67 +1,45 @@
-# 🎤 Karaokê (versão online)
+# 🎤 Karaokê
 
-Funciona só com o navegador. **A TV abre um link uma vez, e todo o resto é controlado pelo celular**: busca, fila, pausar, pular, volume, nota e ajustes. Não precisa de PC nem de servidor.
+App de karaokê que roda **inteiro no navegador do celular**. Busca, fila, nota, favoritos e ranking ficam no celular, e o vídeo vai para a **TV pelo Transmitir do YouTube** (Chromecast, Google TV ou Smart TV com o app do YouTube).
 
-```
- Celular(es) ── internet ──► TV (navegador)
- controle: busca, fila,      anfitriã da sala: toca o YouTube,
- nota, volume, ajustes       guarda fila, histórico e ranking
-```
+## Como usar
 
-A TV gera um **código de sala** (ex.: `K7P2M`) e um QR code. Cada celular lê o QR code (ou digita o código) e passa a controlar a TV. A conexão entre os aparelhos é direta (WebRTC, com PeerJS), e a TV e os celulares podem até estar em redes diferentes.
+1. Abra o app no celular: `https://grgallan.github.io/transbet/karaoke/`. Para ter um ícone, use *Adicionar à tela inicial*.
+2. Em **Ajustes**, cole a chave da API do YouTube (passo a passo abaixo).
+3. Em **Buscar**, procure a música e toque em **＋**.
+4. Em **Palco**, toque no ícone **Transmitir** do player e escolha a TV.
+5. Controle tudo pela barra de baixo:
+   - **❚❚** pausa e continua;
+   - **⭐** finaliza a música e mostra a nota;
+   - **⏭** pula.
+   Quando uma música acaba, a próxima da fila começa sozinha.
 
-## Publicar (grátis, uma vez só)
+**Se o ícone Transmitir não aparecer:** toque em *Abrir no app do YouTube* e transmita por lá. Quando a música acabar, volte ao Karaokê e toque em ⭐ para ver a nota e seguir a fila.
 
-A pasta inteira é um site estático. Escolha uma das opções:
+## Nota
 
-**Netlify Drop (mais fácil)**
-1. No computador, acesse <https://app.netlify.com/drop>.
-2. Arraste a pasta `karaoke-online` para a página.
-3. Você recebe um endereço `https://….netlify.app`. Crie uma conta grátis para ele não expirar.
+- 🎙️ **Microfone**: em **Ajustes**, ligue *Usar o microfone*. O celular analisa presença de voz, afinação e estabilidade. Deixe o app aberto e perto de quem está cantando.
+- 🎲 **Divertida**: nota surpresa.
+- 🚫 **Sem nota**
 
-**GitHub Pages**
-1. Crie um repositório e envie os arquivos desta pasta.
-2. Em **Settings → Pages**, escolha a branch `main` e a pasta `/ (root)`.
-3. O endereço fica `https://SEU-USUARIO.github.io/NOME-DO-REPO/`.
-
-## Usar
-
-1. **Na TV**: abra `https://SEU-ENDERECO/tv.html` no navegador e toque em **COMEÇAR**. Salve o endereço nos favoritos da TV.
-2. **No celular**: leia o QR code da TV. Para instalar o controle como app, use *Adicionar à tela inicial*.
-3. Em **Ajustes**, no celular, cadastre a chave da API do YouTube. A chave fica guardada só na TV.
-
-O código da sala fica salvo na TV e não muda. Assim, quem já conectou uma vez entra direto da próxima vez. Para gerar outro código, use **🔑 Novo código** no canto da tela da TV.
-
-## Chave da API do YouTube
+## Chave da API do YouTube (grátis)
 
 1. Acesse <https://console.cloud.google.com/> e crie um projeto.
 2. Vá em **APIs e serviços → Biblioteca**, procure **YouTube Data API v3** e clique em **Ativar**.
 3. Vá em **Credenciais**, clique em **Criar credenciais** e depois em **Chave de API**.
-4. **Recomendado:** em *Restrições de aplicativo*, escolha **Sites** e adicione `https://SEU-ENDERECO/*`.
-5. Cole a chave em **Ajustes** no celular.
+4. Recomendado: restrinja a chave a **Sites**, com `https://grgallan.github.io/*`.
+5. Cole a chave em **Ajustes**.
 
 A cota grátis permite cerca de 100 buscas por dia, e buscas repetidas ficam guardadas por 12 horas. Sem a chave, ainda dá para colar links do YouTube na busca.
-
-## Nota
-
-- 🎙️ **Microfone**: ligue em **Ajustes → Microfone deste celular** no aparelho de quem está cantando. Como o site é https, funciona sem nenhum aviso de segurança.
-- 🎲 **Divertida**: nota surpresa.
-- 🚫 **Sem nota**
-
-## Observações
-
-- A tela da TV precisa ficar aberta, porque é ela que guarda a fila. O histórico, os favoritos e o ranking ficam salvos no navegador da TV.
-- Alguns vídeos bloqueiam a reprodução fora do YouTube. Quando isso acontece, o app avisa e pula para a próxima.
-- Para testar no computador sem internet entre aparelhos, abra `tv.html?local=1` e `index.html?local=1` em duas abas do mesmo navegador.
 
 ## Arquivos
 
 ```
-index.html          controle do celular
-tv.html             tela da TV (anfitriã da sala)
-js/transporte.js    conexão TV ↔ celulares (PeerJS)
-js/host.js          fila, nota, busca e histórico
-js/tv.js            player do YouTube e telas
-js/controle.js      interface do celular
-js/microfone.js     análise da voz para a nota
+index.html        o app
+js/app.js         telas, player e controles
+js/host.js        fila, nota, histórico e busca no YouTube
+js/microfone.js   análise da voz para a nota
+css/              visual
 ```
+
+Tudo fica salvo no próprio celular (localStorage).

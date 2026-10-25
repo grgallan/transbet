@@ -151,3 +151,25 @@ main { max-width: 680px; margin: 0 auto; padding: 14px 16px; }
 .codigo { font-family: var(--titulo); font-weight: 400; color: var(--amarelo); letter-spacing: .1em; }
 .botao-sec { flex: none; border: 1px solid var(--linha); background: var(--cartao-2); border-radius: 10px; padding: 9px 14px; font-weight: 600; }
 .campo-codigo { font-family: var(--titulo) !important; letter-spacing: .3em; text-transform: uppercase; font-size: 24px !important; margin-top: 12px; }
+
+/* palco (player) */
+.palco-espaco { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--raio); background: var(--cartao); border: 1px solid var(--linha); overflow: hidden; }
+.palco-vazio { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 6px; text-align: center; padding: 16px; color: var(--texto-2); }
+.palco-vazio big { font-size: 34px; }
+.palco-vazio span { font-size: 13px; color: var(--texto-3); }
+.palco-vazio button { margin-top: 6px; border: 0; border-radius: 999px; padding: 9px 18px; font-weight: 700; background: var(--grad); }
+.palco { position: absolute; z-index: 5; border-radius: var(--raio); overflow: hidden; background: #000; }
+.palco.fora { left: -9999px !important; top: 0 !important; width: 480px !important; height: 270px !important; }
+.palco #yt, .palco iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.intro { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; text-align: center; padding: 12px;
+  background: radial-gradient(circle at 30% 20%, rgba(255,46,147,.35), transparent 60%), var(--fundo); }
+.intro small { color: var(--amarelo); letter-spacing: .25em; font-weight: 700; font-size: 11px; }
+.intro-cantor { font-family: var(--titulo); font-size: 32px; line-height: 1.1; margin: 4px 0; }
+.intro-musica { color: var(--texto-2); font-size: 13px; }
+.intro-contagem { font-family: var(--titulo); color: var(--ciano); font-size: 26px; margin-top: 6px; }
+.tocar-overlay { position: absolute; inset: 0; z-index: 3; border: 0; background: rgba(13,6,20,.75); font-size: 20px; font-weight: 800; }
+.tv-dica { display: grid; gap: 4px; margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: rgba(34,228,255,.07); border: 1px solid rgba(34,228,255,.3); font-size: 13px; color: var(--texto-2); line-height: 1.45; }
+.tv-dica > b { color: var(--texto); font-size: 14px; }
+.tv-dica a { color: var(--ciano); font-weight: 600; text-decoration: none; margin-top: 2px; }
+#aba-fila .controles-cartao { margin-top: 12px; }
+.agora { cursor: pointer; }
