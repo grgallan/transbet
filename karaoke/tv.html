@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Karaokê · TV</title>
+<link rel="stylesheet" href="css/base.css">
+<style>
+  body { overflow: hidden; font-size: 1.15vw; }
+  .tela { position: fixed; inset: 0; }
+
+  /* ---------- fundo animado ---------- */
+  .palco {
+    background:
+      radial-gradient(60vw 40vw at 15% 10%, rgba(255,46,147,.22), transparent 60%),
+      radial-gradient(50vw 40vw at 90% 90%, rgba(34,228,255,.18), transparent 60%),
+      var(--fundo);
+  }
+  .holofote { position: absolute; width: 40vw; height: 140vh; top: -20vh; opacity: .12; filter: blur(30px);
+    background: linear-gradient(to bottom, #fff, transparent 70%); transform-origin: top center; animation: varre 9s ease-in-out infinite alternate; }
+  .holofote.a { left: 10vw; } .holofote.b { right: 10vw; animation-delay: -4s; }
+  @keyframes varre { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } }
+
+  /* ---------- início (libera o som) ---------- */
+  #inicio { z-index: 50; display: grid; place-items: center; text-align: center; cursor: pointer; }
+  #inicio h1 { font-size: 7em; margin: 0; }
+  #inicio p { font-size: 1.8em; color: var(--texto-2); margin: .4em 0 1.4em; }
+  .botao-grande { font-size: 1.8em; font-weight: 800; padding: .8em 2em; border-radius: 999px; border: 0;
+    background: var(--grad); color: #fff; box-shadow: var(--sombra-neon); animation: pulsa 1.6s ease-in-out infinite; }
+  @keyframes pulsa { 50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(255,46,147,.55); } }
+
+  /* ---------- ocioso ---------- */
+  #ocioso { display: grid; grid-template-columns: 1.1fr 1fr; gap: 4vw; padding: 5vw 6vw; align-items: center; }
+  #ocioso h1 { font-size: 6em; margin: 0 0 .2em; line-height: 1; }
+  #ocioso .sub { font-size: 1.9em; color: var(--texto-2); margin: 0 0 1.6em; }
+  .qr-cartao { display: flex; gap: 2em; align-items: center; background: rgba(31,16,48,.75); border: 1px solid var(--linha);
+    border-radius: 2em; padding: 1.6em; width: fit-content; backdrop-filter: blur(6px); }
+  .qr-cartao img { width: 13em; height: 13em; border-radius: 1em; background: #fff; padding: .5em; }
+  .qr-cartao .passo { font-size: 1.4em; color: var(--texto-2); margin-bottom: .4em; }
+  .qr-cartao .url { font-size: 1.7em; font-weight: 700; color: var(--ciano); word-break: break-all; }
+  .painel { background: rgba(31,16,48,.75); border: 1px solid var(--linha); border-radius: 2em; padding: 1.8em 2em; backdrop-filter: blur(6px); }
+  .painel h2 { font-family: var(--titulo); font-weight: 400; font-size: 1.6em; margin: 0 0 .8em; color: var(--amarelo); }
+  .painel + .painel { margin-top: 1.6em; }
+  .lista { list-style: none; margin: 0; padding: 0; display: grid; gap: .7em; }
+  .lista li { display: flex; align-items: center; gap: 1em; font-size: 1.35em; }
+  .lista .pos { font-family: var(--titulo); color: var(--rosa); width: 1.6em; text-align: center; }
+  .lista .info { min-width: 0; flex: 1; }
+  .lista .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+  .lista .c { color: var(--texto-3); font-size: .85em; }
+  .lista .n { font-family: var(--titulo); color: var(--amarelo); font-size: 1.2em; }
+  .vazio { color: var(--texto-3); font-size: 1.3em; }
+
+  /* ---------- player ---------- */
+  #player { background: #000; }
+  #yt, #player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .selo { position: absolute; top: 1.4vw; left: 1.4vw; display: flex; align-items: center; gap: .8em;
+    background: rgba(13,6,20,.78); border: 1px solid var(--linha); border-radius: 999px; padding: .5em 1.2em .5em .5em;
+    font-size: 1.25em; max-width: 46vw; backdrop-filter: blur(6px); transition: opacity .6s; }
+  .selo .avatar { width: 2.4em; height: 2.4em; border-radius: 50%; background: var(--grad); display: grid; place-items: center; font-weight: 800; flex: none; }
+  .selo .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .selo b { color: var(--rosa); }
+  .seguinte { position: absolute; top: 1.4vw; right: 1.4vw; background: rgba(13,6,20,.78); border: 1px solid var(--linha);
+    border-radius: 1em; padding: .6em 1.1em; font-size: 1.1em; max-width: 32vw; backdrop-filter: blur(6px); }
+  .seguinte small { color: var(--amarelo); font-weight: 700; letter-spacing: .08em; display: block; font-size: .75em; }
+  .seguinte div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .discreto .selo, .discreto .seguinte { opacity: .25; }
+  .nivel-mic { position: absolute; left: 1.4vw; bottom: 1.4vw; width: .6em; height: 8em; border-radius: 1em; background: rgba(255,255,255,.12); overflow: hidden; font-size: 1.2em; }
+  .nivel-mic i { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(to top, var(--verde), var(--amarelo), var(--rosa)); transition: height .08s; }
+  .pausado { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(13,6,20,.55); font-family: var(--titulo); font-size: 5em; }
+
+  /* ---------- intro do cantor ---------- */
+  #intro { z-index: 20; display: grid; place-items: center; text-align: center; }
+  #intro .rotulo { font-size: 1.6em; letter-spacing: .3em; color: var(--amarelo); font-weight: 700; }
+  #intro .cantor { font-family: var(--titulo); font-size: 7em; line-height: 1.05; margin: .15em 0; animation: zoom .6s cubic-bezier(.2,1.4,.4,1); }
+  #intro .musica { font-size: 2.2em; color: var(--texto-2); max-width: 70vw; margin: 0 auto; }
+  #intro .contagem { font-family: var(--titulo); font-size: 3em; margin-top: 1em; color: var(--ciano); }
+  @keyframes zoom { from { transform: scale(.4); opacity: 0; } }
+
+  /* ---------- nota ---------- */
+  #nota { z-index: 30; display: grid; place-items: center; text-align: center; background: rgba(13,6,20,.9); backdrop-filter: blur(10px); }
+  #nota .quem { font-size: 1.8em; color: var(--texto-2); }
+  #nota .quem b { color: var(--texto); }
+  #nota .numero { font-family: var(--titulo); font-size: 16em; line-height: 1; margin: .05em 0; }
+  #nota .estrelas { font-size: 4.5em; }
+  #nota .frase { font-size: 2.4em; font-weight: 700; margin: .6em 0 .2em; }
+  #nota .obs { color: var(--texto-3); font-size: 1.2em; }
+  .barras { display: grid; grid-template-columns: repeat(3, 14em); gap: 2em; justify-content: center; margin-top: 1.6em; }
+  .barra { text-align: left; font-size: 1.2em; }
+  .barra .trilho { height: .7em; border-radius: 1em; background: var(--cartao-2); overflow: hidden; margin-top: .4em; }
+  .barra .trilho i { display: block; height: 100%; width: 0; background: var(--grad); transition: width 1.6s ease-out; }
+  .confete { position: absolute; top: -5vh; width: .9vw; height: 1.6vw; border-radius: 2px; animation: cai linear forwards; }
+  @keyframes cai { to { transform: translateY(115vh) rotate(720deg); } }
+
+  /* ---------- canto inferior ---------- */
+  .ferramentas { position: fixed; right: 1.2vw; bottom: 1.2vw; z-index: 60; display: flex; gap: .6em; opacity: 0; transition: opacity .3s; }
+  body:hover .ferramentas { opacity: 1; }
+  .ferramentas button { font-size: 1.1em; padding: .5em .9em; border-radius: 999px; border: 1px solid var(--linha); background: rgba(31,16,48,.85); }
+  .ferramentas button.ativo { border-color: var(--verde); color: var(--verde); }
+  .avisos { top: 2vw; font-size: 1.2em; }
+  .codigo b, .inicio-sala b { font-family: var(--titulo); font-weight: 400; color: var(--amarelo); letter-spacing: .12em; }
+  .codigo { margin-top: .8em; }
+  .status-sala { font-size: 1.1em; margin-top: .6em; font-weight: 600; }
+  .status-sala.ok { color: var(--verde); } .status-sala.alerta { color: var(--amarelo); }
+  .conectados { font-size: 1.05em; color: var(--texto-3); margin-top: .2em; }
+  #inicio .inicio-sala { font-size: 1.6em; margin: 0 0 .4em; }
+  #inicio .inicio-sala b { font-size: 1.4em; }
+  #inicio .inicio-fila { font-size: 1.3em; color: var(--ciano); margin: 0 0 1.2em; min-height: 1em; }
+</style>
+</head>
+<body>
+
+<div class="tela palco"><div class="holofote a"></div><div class="holofote b"></div></div>
+
+<!-- Ocioso: sem música tocando -->
+<section id="ocioso" class="tela">
+  <div>
+    <h1 class="marca">KARAOKÊ</h1>
+    <p class="sub">Escolha sua música pelo celular e solte a voz!</p>
+    <div class="qr-cartao">
+      <img id="qr" alt="QR code para abrir o controle">
+      <div>
+        <div class="passo">1. Conecte o celular no mesmo Wi-Fi</div>
+        <div class="passo">2. Aponte a câmera ou acesse:</div>
+        <div class="url" id="url">…</div>
+        <div class="passo codigo">Código da sala: <b class="codigo-sala">…</b></div>
+        <div class="status-sala" id="statusSala">● Abrindo a sala…</div>
+        <div class="conectados" id="conectados"></div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="painel">
+      <h2>NA FILA</h2>
+      <ul class="lista" id="filaOcioso"></ul>
+    </div>
+    <div class="painel">
+      <h2>🏆 RANKING DE HOJE</h2>
+      <ul class="lista" id="ranking"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- Player -->
+<section id="player" class="tela oculto">
+  <div id="yt"></div>
+  <div class="selo" id="selo"></div>
+  <div class="seguinte oculto" id="seguinte"></div>
+  <div class="nivel-mic oculto" id="nivelMic"><i></i></div>
+  <div class="pausado oculto" id="pausado">❚❚ PAUSADO</div>
+</section>
+
+<section id="intro" class="tela palco oculto">
+  <div>
+    <div class="rotulo">AGORA NO PALCO</div>
+    <div class="cantor" id="introCantor"></div>
+    <div class="musica" id="introMusica"></div>
+    <div class="contagem" id="introContagem"></div>
+  </div>
+</section>
+
+<section id="nota" class="tela oculto">
+  <div>
+    <div class="quem" id="notaQuem"></div>
+    <div class="numero marca" id="notaNumero">0</div>
+    <div class="estrelas" id="notaEstrelas"></div>
+    <div class="frase" id="notaFrase"></div>
+    <div class="barras oculto" id="notaBarras"></div>
+    <div class="obs" id="notaObs"></div>
+  </div>
+</section>
+
+<section id="inicio" class="tela palco">
+  <div>
+    <h1 class="marca">KARAOKÊ</h1>
+    <p>A TV está pronta. Toque abaixo para liberar o som.<br>Depois, controle tudo pelo celular.</p>
+    <p class="inicio-sala">Código da sala: <b class="codigo-sala">…</b></p>
+    <p class="inicio-fila" id="inicioFila"></p>
+    <button class="botao-grande">▶ COMEÇAR</button>
+  </div>
+</section>
+
+<div class="ferramentas">
+  <button id="btMic" title="Usar o microfone deste aparelho para dar nota">🎙️ Microfone</button>
+  <button id="btTela" title="Tela cheia">⛶ Tela cheia</button>
+  <button id="btCodigo" title="Gerar outro código de sala">🔑 Novo código</button>
+</div>
+<div class="avisos" id="avisos"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="js/transporte.js"></script>
+<script src="js/host.js"></script>
+<script src="js/microfone.js"></script>
+<script src="js/tv.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>

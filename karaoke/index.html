@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0614">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icone.svg">
+<title>Karaokê · Controle</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/controle.css">
+</head>
+<body>
+
+<header class="topo">
+  <div class="marca logo">KARAOKÊ</div>
+  <button class="cantor-chip" id="btCantor" title="Trocar nome do cantor">🎤 <span id="nomeCantor">Seu nome</span></button>
+  <span class="status" id="status" title="Conexão"></span>
+</header>
+<div class="faixa-conexao oculto" id="faixaConexao"></div>
+
+<main>
+  <!-- BUSCAR -->
+  <section class="aba ativa" id="aba-buscar">
+    <form class="busca" id="formBusca" autocomplete="off">
+      <input id="campoBusca" type="search" placeholder="Música ou artista… (ou cole um link)" enterkeyhint="search">
+      <button type="submit" aria-label="Buscar">🔍</button>
+    </form>
+    <div class="dica oculto" id="semChave">
+      <b>Busca ainda não configurada.</b> Cadastre a chave da API do YouTube em <a href="#" data-ir="ajustes">Ajustes</a>.
+      Enquanto isso, cole aqui o link de um vídeo do YouTube.
+    </div>
+    <div class="sugestoes" id="sugestoes"></div>
+    <ul class="resultados" id="resultados"></ul>
+    <button class="mais oculto" id="btMais">Carregar mais</button>
+  </section>
+
+  <!-- FILA -->
+  <section class="aba" id="aba-fila">
+    <div class="controles-cartao">
+      <div class="linha-ctrl">
+        <button id="btReiniciar" title="Reiniciar música">↺ Reiniciar</button>
+        <button id="btLimparFila" title="Limpar fila">🗑 Limpar fila</button>
+      </div>
+      <label class="volume">🔈 <input type="range" id="volume" min="0" max="100"> 🔊</label>
+    </div>
+    <h2 class="secao">Próximas <span id="qtdFila"></span></h2>
+    <ul class="resultados" id="listaFila"></ul>
+  </section>
+
+  <!-- FAVORITOS -->
+  <section class="aba" id="aba-favoritos">
+    <h2 class="secao">Favoritos</h2>
+    <ul class="resultados" id="listaFavoritos"></ul>
+  </section>
+
+  <!-- RANKING -->
+  <section class="aba" id="aba-ranking">
+    <div class="filtro">
+      <button class="ativo" data-periodo="hoje">Hoje</button>
+      <button data-periodo="tudo">Sempre</button>
+    </div>
+    <h2 class="secao">🏆 Melhores notas</h2>
+    <ul class="ranking" id="listaRanking"></ul>
+    <h2 class="secao">Histórico</h2>
+    <ul class="resultados" id="listaHistorico"></ul>
+  </section>
+
+  <!-- AJUSTES -->
+  <section class="aba" id="aba-ajustes">
+    <h2 class="secao">Nota ao final da música</h2>
+    <div class="opcoes" id="modoNota">
+      <button data-modo="microfone"><b>🎙️ Microfone</b><small>Analisa presença, afinação e estabilidade da voz</small></button>
+      <button data-modo="divertida"><b>🎲 Divertida</b><small>Nota surpresa, estilo karaokê de bar</small></button>
+      <button data-modo="desligada"><b>🚫 Sem nota</b><small>Passa direto para a próxima</small></button>
+    </div>
+
+    <div class="cartao" id="cartaoMic">
+      <div class="cartao-topo">
+        <div><b>Microfone deste celular</b><small id="micInfo">Use o celular de quem está cantando, perto da boca.</small></div>
+        <button class="alternar" id="btMic" role="switch" aria-checked="false"><i></i></button>
+      </div>
+      <div class="medidor oculto" id="medidor"><i></i></div>
+      <div class="dica oculto" id="micInseguro">
+        O navegador só libera o microfone quando o app é aberto por um endereço <b>https</b>. Abra o Karaokê pelo link publicado (GitHub Pages ou Netlify).
+      </div>
+    </div>
+
+    <h2 class="secao">YouTube</h2>
+    <div class="cartao">
+      <label class="campo">Chave da API (YouTube Data API v3)
+        <input id="apiKey" type="password" placeholder="AIza…" autocomplete="off">
+      </label>
+      <small id="apiStatus" class="status-api"></small>
+      <label class="campo">Palavra adicionada à busca
+        <input id="sufixo" type="text" placeholder="karaoke">
+      </label>
+      <button class="primario" id="btSalvarApi">Salvar e testar</button>
+      <details class="guia">
+        <summary>Como conseguir a chave (grátis)</summary>
+        <ol>
+          <li>Acesse <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">console.cloud.google.com</a> e entre com sua conta Google.</li>
+          <li>Crie um projeto (ex.: “Karaoke”).</li>
+          <li>Em <b>APIs e serviços → Biblioteca</b>, procure <b>YouTube Data API v3</b> e clique em <b>Ativar</b>.</li>
+          <li>Em <b>APIs e serviços → Credenciais</b>, clique em <b>Criar credenciais → Chave de API</b>.</li>
+          <li>Copie a chave e cole aqui.</li>
+        </ol>
+        <p>Recomendado: em <b>Restrições da chave</b>, escolha <b>Sites</b> e adicione o endereço deste app, para que ninguém use sua chave em outro lugar.</p>
+        <p>A cota grátis permite cerca de 100 buscas por dia. Buscas repetidas ficam guardadas por 12h e não gastam cota. A chave fica salva só na TV.</p>
+      </details>
+    </div>
+
+    <h2 class="secao">Sala</h2>
+    <div class="cartao">
+      <div class="cartao-topo">
+        <div><b>Conectado à sala <span class="codigo" id="codigoAtual">—</span></b><small>O código aparece na tela da TV.</small></div>
+        <button class="botao-sec" id="btTrocarSala">Trocar</button>
+      </div>
+    </div>
+
+    <h2 class="secao">Tela da TV</h2>
+    <div class="cartao">
+      <p class="texto">No navegador da TV, abra uma vez o endereço abaixo e toque em <b>Começar</b>. Depois disso, tudo é controlado por aqui.</p>
+      <div class="url-tv" id="urlTv">…</div>
+      <button id="btLimparHist" class="perigo">Limpar histórico e ranking</button>
+    </div>
+  </section>
+</main>
+
+<!-- Tocando agora -->
+<div class="agora oculto" id="agora">
+  <div class="progresso"><i id="barraProg"></i></div>
+  <img id="agoraThumb" alt="">
+  <div class="agora-info">
+    <div class="t" id="agoraTitulo"></div>
+    <div class="c" id="agoraCantor"></div>
+  </div>
+  <button id="btAlternar" class="redondo" aria-label="Pausar/continuar">❚❚</button>
+  <button id="btFinalizar" class="redondo destaque" aria-label="Finalizar com nota">⭐</button>
+  <button id="btPular" class="redondo" aria-label="Pular">⏭</button>
+</div>
+
+<nav class="abas">
+  <button class="ativa" data-aba="buscar"><span>🔍</span>Buscar</button>
+  <button data-aba="fila"><span>📜</span>Fila<em class="contador oculto" id="badgeFila"></em></button>
+  <button data-aba="favoritos"><span>❤️</span>Favoritos</button>
+  <button data-aba="ranking"><span>🏆</span>Ranking</button>
+  <button data-aba="ajustes"><span>⚙️</span>Ajustes</button>
+</nav>
+
+<!-- Modal de nota (no celular) -->
+<div class="modal oculto" id="modalNota">
+  <div class="modal-caixa">
+    <div class="m-quem" id="mQuem"></div>
+    <div class="m-nota marca" id="mNota"></div>
+    <div class="estrelas" id="mEstrelas"></div>
+    <div class="m-frase" id="mFrase"></div>
+    <button class="primario" id="btFecharNota">Próxima música ⏭</button>
+  </div>
+</div>
+
+<!-- Modal nome -->
+<div class="modal oculto" id="modalNome">
+  <form class="modal-caixa" id="formNome">
+    <h3>Quem vai cantar?</h3>
+    <input id="campoNome" maxlength="40" placeholder="Seu nome" autocomplete="nickname">
+    <button class="primario" type="submit">Salvar</button>
+  </form>
+</div>
+
+<!-- Modal sala -->
+<div class="modal oculto" id="modalSala">
+  <form class="modal-caixa" id="formSala">
+    <h3>Entrar na sala</h3>
+    <p class="m-quem">Leia o QR code da TV ou digite o código que aparece nela.</p>
+    <input id="campoSala" maxlength="8" placeholder="Ex.: K7P2M" autocapitalize="characters" autocomplete="off" class="campo-codigo">
+    <button class="primario" type="submit">Entrar</button>
+  </form>
+</div>
+
+<div class="avisos" id="avisos"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="js/transporte.js"></script>
+<script src="js/microfone.js"></script>
+<script src="js/controle.js"></script>
+</body>
+</html>
